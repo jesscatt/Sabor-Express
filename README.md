@@ -1,48 +1,38 @@
-# trabalho-solid SaborExpress
+# SaborExpress
 
-Trabalho desenvolvido para a disciplina de Programação Orientada a Objetos: SaborExpress, o delivery completo.
+trabalho de SOLID de POO (prof. Augusto)
 
-## Como executar
+basicamente é um sistema de delivery pro restaurante: cadastra cliente, faz os pedidos do dia e no final gera o fechamento com o faturamento e o pedido mais caro.
+
+## pra rodar
 
 ```bash
 javac -encoding UTF-8 -d out $(find src -name "*.java")
 java -cp out app.Principal
 ```
 
-## Pacotes
+(sem o encoding os acentos saem tudo zoado)
 
-| Pacote | Conteúdo |
-|---|---|
-| `app` | `Principal` (demonstração) |
-| `modelo` | `Cliente` |
-| `cardapio` | `Prato` (abstrata), `PratoExecutivo`, `Combo`, `PratoEspecial` |
-| `pedido` | `Pedido`, `ControlePedidos` |
-| `relatorio` | `GeradorDeRelatorio`, `FormatadorTexto`, `DestinoConsole`, `DestinoArquivo` |
-| `contrato` | `Precificavel`, `Preparavel`, `FormatadorRelatorio`, `DestinoRelatorio` |
-| `excecao` | `PrecoInvalidoException` |
+## pastas
 
-## Onde está cada princípio SOLID
+dividi em app, modelo, cardapio, pedido, relatorio, contrato e excecao. as interfaces ficaram todas no contrato, igual fiz nos exercícios do FrotaLog e da PataViva.
 
-**S - Responsabilidade Única**
-Cada classe tem um único motivo para mudar: `Cliente` guarda dados, `Pedido` junta pratos de um cliente, `ControlePedidos` controla os pedidos do dia (faturamento e mais caro), `FormatadorTexto` só monta o texto, `DestinoConsole`/`DestinoArquivo` só enviam e `GeradorDeRelatorio` só coordena o fechamento.
+## o SOLID
 
-**O - Aberto/Fechado**
-`Prato` é abstrata e cada tipo implementa `calcularPreco()`. `Pedido` e `ControlePedidos` percorrem a lista pela referência da mãe, sem `if` perguntando o tipo. Um novo destino de relatório também entra só criando classe.
+o S tá basicamente em tudo. tentei não deixar nenhuma classe fazendo duas coisas, o ControlePedidos só cuida dos pedidos do dia e o relatório ficou dividido em 3 (um gera, um formata, um envia).
 
-**L - Substituição de Liskov**
-O contrato de `Prato` promete: `calcularPreco()` nunca lança exceção e nunca devolve valor negativo. A validação de preço fica no construtor, então qualquer filha substitui a mãe dentro do `Pedido` sem surpresas.
+o O é o Prato. ele é abstrato e cada tipo calcula seu preço (executivo é o preço normal, combo tem 15% de desconto e o especial soma o ingrediente premium). o pedido só faz um for somando, não tem if perguntando qual tipo é.
 
-**I - Segregação de Interfaces**
-Contratos magros: `Precificavel` (só preço) e `Preparavel` (só tempo de preparo). `Prato` assina os dois; `Pedido` assina só `Precificavel`, porque não tem tempo de preparo próprio. O relatório também foi dividido em `FormatadorRelatorio` e `DestinoRelatorio`, em vez de uma interface única.
+Liskov: o calcularPreco nunca dá exceção, a validação do preço fica no construtor. ou seja, se o prato existe, o preço dele é válido. fiz assim por causa daquele exemplo da bicicleta, que quebrava o despacho no meio da soma.
 
-**D - Inversão de Dependência**
-`GeradorDeRelatorio` depende das interfaces `FormatadorRelatorio` e `DestinoRelatorio`, recebidas pelo construtor. Trocar console por arquivo (ou outro meio no futuro) muda só a montagem na `Principal`; o gerador não é editado.
+o I foi o que eu mais fiquei em dúvida. acabei fazendo duas interfaces pequenas, Precificavel e Preparavel. o Prato tem preço e tempo de preparo, então assina as duas. o Pedido só tem preço, então assina só a Precificavel. se fosse uma interface só, o pedido ia ter que implementar tempo de preparo sem precisar.
 
-## Regras de negócio
+o D tá no relatório. o GeradorDeRelatorio recebe o destino pelo construtor e não sabe se é console ou arquivo. na Principal eu mando primeiro pro console e depois pra arquivo, trocando só uma linha. peguei a ideia do exemplo do DipComparado.
 
-- Preço base negativo: `PrecoInvalidoException` (exceção própria, checked), tratada com `try/catch` sem derrubar o programa.
-- Pedido sem cliente: o construtor de `Pedido` recusa com `IllegalArgumentException`.
+## erros
 
-## Dica de teste: e o Prato Diet?
+preço negativo cai na PrecoInvalidoException (que eu criei), e o try/catch segura sem parar o programa. pedido sem cliente dá IllegalArgumentException no construtor, então nem chega a criar.
 
-Nenhum arquivo existente precisa ser editado na lógica. Basta criar `cardapio/PratoDiet.java` estendendo `Prato`. A `Principal` só muda se quisermos usar o novo prato na demonstração.
+## prato diet
+
+a pergunta era quantos arquivos teria que editar. nenhum! é só criar o PratoDiet extends Prato e pronto
